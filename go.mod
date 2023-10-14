@@ -1,6 +1,6 @@
 module github.com/MatheusAbdias/go_simple_bank
 
-go 1.21.1
+go 1.20
 
 require (
 	github.com/golang-migrate/migrate/v4 v4.16.2
