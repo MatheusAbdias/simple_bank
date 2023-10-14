@@ -1,0 +1,9 @@
+{
+  "recommendation": [
+    "emeraldwalk.RunOnSave",
+    "ms-azuretools.vscode-docker",
+    "mikestead.dotenv",
+    "golang.go",
+    "exiasr.hadolint"
+  ]
+}
