@@ -6,8 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/MatheusAbdias/go_simple_bank/util"
 	"github.com/stretchr/testify/require"
+
+	"github.com/MatheusAbdias/go_simple_bank/util"
 )
 
 func CreateRandomAccount(t *testing.T) Account {
@@ -31,6 +32,7 @@ func CreateRandomAccount(t *testing.T) Account {
 
 	return account
 }
+
 func TestCreateAccount(t *testing.T) {
 	CreateRandomAccount(t)
 }

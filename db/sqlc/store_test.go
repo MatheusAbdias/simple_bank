@@ -97,6 +97,7 @@ func TestTranferWithTx(t *testing.T) {
 	require.Equal(t, toAccountBalance+int64(cucurrent)*amount, updateToAccount.Balance)
 
 }
+
 func TestTranferWithTxDeadlock(t *testing.T) {
 	store := NewStore(dbConn)
 

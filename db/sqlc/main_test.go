@@ -8,12 +8,14 @@ import (
 	"path/filepath"
 	"testing"
 
+	_ "github.com/lib/pq"
+
 	"github.com/MatheusAbdias/go_simple_bank/cmd"
 	"github.com/MatheusAbdias/go_simple_bank/util"
-	_ "github.com/lib/pq"
 )
 
 var testQueries *Queries
+
 var dbConn *sql.DB
 
 func findProjectDirRecursive(currentDir, projectName string) string {
@@ -28,6 +30,7 @@ func findProjectDirRecursive(currentDir, projectName string) string {
 	parentDir := filepath.Dir(currentDir)
 	return findProjectDirRecursive(parentDir, projectName)
 }
+
 func findProjectDir(projectName string) string {
 	currentDir, err := os.Getwd()
 	if err != nil {

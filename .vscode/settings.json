@@ -4,6 +4,10 @@
       {
         "match": "\\.go$",
         "cmd": "golines ${file} -w"
+      },
+      {
+        "match": "\\.go$",
+        "cmd": "goimports -w ${file}"
       }
     ]
   },

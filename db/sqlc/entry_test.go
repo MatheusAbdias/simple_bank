@@ -5,8 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/MatheusAbdias/go_simple_bank/util"
 	"github.com/stretchr/testify/require"
+
+	"github.com/MatheusAbdias/go_simple_bank/util"
 )
 
 func CreateRandomEntry(t *testing.T, toAccount Account, amount int64) Entry {
