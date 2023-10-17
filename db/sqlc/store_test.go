@@ -7,25 +7,25 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestTranferWithTx(t *testing.T) {
-	store := NewStore(dbConn)
+func TestTransferWithTx(t *testing.T) {
+	store := NewSQLStore(dbConn)
 
 	fromAccount := CreateRandomAccount(t)
 	toAccount := CreateRandomAccount(t)
 	fromAccountBalance := fromAccount.Balance
 	toAccountBalance := toAccount.Balance
 
-	cucurrent := 5
+	n := 5
 	amount := int64(10)
 
 	errs := make(chan error)
 	results := make(chan TransferTxResult)
 
-	for i := 0; i < cucurrent; i++ {
+	for i := 0; i < n; i++ {
 		go func() {
 			result, err := store.TransferTx(context.Background(), TransferTxParams{
-				FromAccountId: fromAccount.ID,
-				ToAccountId:   toAccount.ID,
+				FromAccountID: fromAccount.ID,
+				ToAccountID:   toAccount.ID,
 				Amount:        amount,
 			})
 
@@ -34,8 +34,8 @@ func TestTranferWithTx(t *testing.T) {
 		}()
 	}
 
-	occurrencies := make(map[int]bool)
-	for i := 0; i < cucurrent; i++ {
+	occurrences := make(map[int]bool)
+	for i := 0; i < n; i++ {
 		err := <-errs
 		require.NoError(t, err)
 
@@ -79,10 +79,10 @@ func TestTranferWithTx(t *testing.T) {
 		require.True(t, diffFromAccount%amount == 0)
 
 		k := int(diffFromAccount / amount)
-		require.True(t, k >= 1 && k <= cucurrent)
+		require.True(t, k >= 1 && k <= n)
 
-		require.NotContains(t, occurrencies, k)
-		occurrencies[k] = true
+		require.NotContains(t, occurrences, k)
+		occurrences[k] = true
 	}
 
 	updateFromAccount, err := testQueries.GetAccount(context.Background(), fromAccount.ID)
@@ -93,23 +93,23 @@ func TestTranferWithTx(t *testing.T) {
 	require.NoError(t, err)
 	require.NotEmpty(t, updateToAccount)
 
-	require.Equal(t, fromAccountBalance-int64(cucurrent)*amount, updateFromAccount.Balance)
-	require.Equal(t, toAccountBalance+int64(cucurrent)*amount, updateToAccount.Balance)
+	require.Equal(t, fromAccountBalance-int64(n)*amount, updateFromAccount.Balance)
+	require.Equal(t, toAccountBalance+int64(n)*amount, updateToAccount.Balance)
 
 }
 
-func TestTranferWithTxDeadlock(t *testing.T) {
-	store := NewStore(dbConn)
+func TestTransferWithTxDeadlock(t *testing.T) {
+	store := NewSQLStore(dbConn)
 
 	account1 := CreateRandomAccount(t)
 	account2 := CreateRandomAccount(t)
 
-	cucurrent := 10
+	n := 10
 	amount := int64(10)
 
 	errs := make(chan error)
 
-	for i := 0; i < cucurrent; i++ {
+	for i := 0; i < n; i++ {
 		fromAccountId := account1.ID
 		toAccountId := account2.ID
 
@@ -120,8 +120,8 @@ func TestTranferWithTxDeadlock(t *testing.T) {
 
 		go func() {
 			_, err := store.TransferTx(context.Background(), TransferTxParams{
-				FromAccountId: fromAccountId,
-				ToAccountId:   toAccountId,
+				FromAccountID: fromAccountId,
+				ToAccountID:   toAccountId,
 				Amount:        amount,
 			})
 
@@ -129,7 +129,7 @@ func TestTranferWithTxDeadlock(t *testing.T) {
 		}()
 	}
 
-	for i := 0; i < cucurrent; i++ {
+	for i := 0; i < n; i++ {
 		err := <-errs
 		require.NoError(t, err)
 

@@ -12,8 +12,10 @@ import (
 )
 
 func CreateRandomAccount(t *testing.T) Account {
+	user := createRandomUser(t)
+
 	arg := CreateAccountParams{
-		Owner:    util.RandomOwner(),
+		Owner:    user.Username,
 		Balance:  util.RandomMoney(),
 		Currency: util.RandomCurrency(),
 	}
@@ -40,16 +42,16 @@ func TestCreateAccount(t *testing.T) {
 func TestGetAccount(t *testing.T) {
 	account := CreateRandomAccount(t)
 
-	fetchedAcoount, err := testQueries.GetAccount(context.Background(), account.ID)
+	fetchedAccount, err := testQueries.GetAccount(context.Background(), account.ID)
 
 	require.NoError(t, err)
-	require.NotEmpty(t, fetchedAcoount)
+	require.NotEmpty(t, fetchedAccount)
 
-	require.Equal(t, account.ID, fetchedAcoount.ID)
-	require.Equal(t, account.Owner, fetchedAcoount.Owner)
-	require.Equal(t, account.Balance, fetchedAcoount.Balance)
-	require.Equal(t, account.Currency, fetchedAcoount.Currency)
-	require.WithinDuration(t, account.CreatedAt, fetchedAcoount.CreatedAt, time.Second)
+	require.Equal(t, account.ID, fetchedAccount.ID)
+	require.Equal(t, account.Owner, fetchedAccount.Owner)
+	require.Equal(t, account.Balance, fetchedAccount.Balance)
+	require.Equal(t, account.Currency, fetchedAccount.Currency)
+	require.WithinDuration(t, account.CreatedAt, fetchedAccount.CreatedAt, time.Second)
 }
 
 func TestUpdateAccount(t *testing.T) {
@@ -57,16 +59,16 @@ func TestUpdateAccount(t *testing.T) {
 
 	arg := AddAccountBalanceParams{ID: account.ID, Amount: util.RandomMoney()}
 
-	fetchedAcoount, err := testQueries.AddAccountBalance(context.Background(), arg)
+	fetchedAccount, err := testQueries.AddAccountBalance(context.Background(), arg)
 
 	require.NoError(t, err)
-	require.NotEmpty(t, fetchedAcoount)
+	require.NotEmpty(t, fetchedAccount)
 
-	require.Equal(t, account.ID, fetchedAcoount.ID)
-	require.Equal(t, account.Owner, fetchedAcoount.Owner)
-	require.Equal(t, account.Currency, fetchedAcoount.Currency)
-	require.Equal(t, account.Balance+arg.Amount, fetchedAcoount.Balance)
-	require.WithinDuration(t, account.CreatedAt, fetchedAcoount.CreatedAt, time.Second)
+	require.Equal(t, account.ID, fetchedAccount.ID)
+	require.Equal(t, account.Owner, fetchedAccount.Owner)
+	require.Equal(t, account.Currency, fetchedAccount.Currency)
+	require.Equal(t, account.Balance+arg.Amount, fetchedAccount.Balance)
+	require.WithinDuration(t, account.CreatedAt, fetchedAccount.CreatedAt, time.Second)
 
 }
 

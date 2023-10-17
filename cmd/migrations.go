@@ -10,6 +10,8 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
+const ProjectName = "simple_bank"
+
 func Migrate() {
 	dbUrl := os.Getenv("DATABASE_URL")
 	baseDir := os.Getenv("BASE_DIR")

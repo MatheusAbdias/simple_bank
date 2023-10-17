@@ -8,19 +8,24 @@ import (
 	"golang.org/x/exp/slog"
 )
 
-type Store struct {
+type Store interface {
+	Querier
+	TransferTx(ctx context.Context, arg TransferTxParams) (TransferTxResult, error)
+}
+
+type SQLStore struct {
 	*Queries
 	db *sql.DB
 }
 
-func NewStore(db *sql.DB) *Store {
-	return &Store{
+func NewSQLStore(db *sql.DB) *SQLStore {
+	return &SQLStore{
 		db:      db,
 		Queries: New(db),
 	}
 }
 
-func (store *Store) execTx(ctx context.Context, fn func(*Queries) error) error {
+func (store *SQLStore) execTx(ctx context.Context, fn func(*Queries) error) error {
 	tx, err := store.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -43,8 +48,8 @@ func (store *Store) execTx(ctx context.Context, fn func(*Queries) error) error {
 }
 
 type TransferTxParams struct {
-	FromAccountId int64 `json:"from_account_id"`
-	ToAccountId   int64 `json:"to_account_id"`
+	FromAccountID int64 `json:"from_account_id"`
+	ToAccountID   int64 `json:"to_account_id"`
 	Amount        int64 `json:"amount"`
 }
 
@@ -56,7 +61,7 @@ type TransferTxResult struct {
 	ToEntry     Entry    `json:"to_entry"`
 }
 
-func (store *Store) TransferTx(
+func (store *SQLStore) TransferTx(
 	ctx context.Context,
 	arg TransferTxParams,
 ) (TransferTxResult, error) {
@@ -66,8 +71,8 @@ func (store *Store) TransferTx(
 		var err error
 
 		result.Transfer, err = q.CreateTransfer(ctx, CreateTransferParams{
-			FromAccountID: arg.FromAccountId,
-			ToAccountID:   arg.ToAccountId,
+			FromAccountID: arg.FromAccountID,
+			ToAccountID:   arg.ToAccountID,
 			Amount:        arg.Amount,
 		})
 		if err != nil {
@@ -81,7 +86,7 @@ func (store *Store) TransferTx(
 		)
 
 		result.FromEntry, err = q.CreateEntry(ctx, CreateEntryParams{
-			AccountID: arg.FromAccountId,
+			AccountID: arg.FromAccountID,
 			Amount:    -arg.Amount,
 		})
 		if err != nil {
@@ -94,7 +99,7 @@ func (store *Store) TransferTx(
 		)
 
 		result.ToEntry, err = q.CreateEntry(ctx, CreateEntryParams{
-			AccountID: arg.ToAccountId,
+			AccountID: arg.ToAccountID,
 			Amount:    arg.Amount,
 		})
 		if err != nil {
@@ -106,13 +111,13 @@ func (store *Store) TransferTx(
 			slog.Int64("Amount:", result.ToEntry.Amount),
 		)
 
-		if arg.FromAccountId < arg.ToAccountId {
+		if arg.FromAccountID < arg.ToAccountID {
 			result.FromAccount, result.ToAccount, err = addMoney(
 				ctx,
 				q,
-				arg.FromAccountId,
+				arg.FromAccountID,
 				-arg.Amount,
-				arg.ToAccountId,
+				arg.ToAccountID,
 				arg.Amount,
 			)
 			if err != nil {
@@ -123,9 +128,9 @@ func (store *Store) TransferTx(
 			result.ToAccount, result.FromAccount, err = addMoney(
 				ctx,
 				q,
-				arg.ToAccountId,
+				arg.ToAccountID,
 				arg.Amount,
-				arg.FromAccountId,
+				arg.FromAccountID,
 				-arg.Amount,
 			)
 			if err != nil {
