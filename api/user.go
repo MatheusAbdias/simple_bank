@@ -1,13 +1,16 @@
 package api
 
 import (
+	"database/sql"
+	"errors"
 	"net/http"
 	"time"
 
-	db "github.com/MatheusAbdias/go_simple_bank/db/sqlc"
-	"github.com/MatheusAbdias/go_simple_bank/util"
 	"github.com/gin-gonic/gin"
 	"github.com/lib/pq"
+
+	db "github.com/MatheusAbdias/go_simple_bank/db/sqlc"
+	"github.com/MatheusAbdias/go_simple_bank/util"
 )
 
 type createUserDTO struct {
@@ -17,12 +20,22 @@ type createUserDTO struct {
 	Email    string `json:"email"     binding:"required,email"`
 }
 
-type createdUserResponseDTO struct {
+type userResponseDTO struct {
 	Username          string    `json:"username"            binding:"required,alphanum"`
 	FullName          string    `json:"full_name"           binding:"required"`
 	Email             string    `json:"email"               binding:"required,email"`
 	PasswordChangedAt time.Time `json:"password_changed_at"`
 	CreatedAt         time.Time `json:"created_at"`
+}
+
+func newUserResponseDTO(user db.User) userResponseDTO {
+	return userResponseDTO{
+		Username:          user.Username,
+		FullName:          user.FullName,
+		Email:             user.Email,
+		PasswordChangedAt: user.PasswordChangedAt,
+		CreatedAt:         user.CreatedAt,
+	}
 }
 
 func (server *Server) createUser(ctx *gin.Context) {
@@ -58,14 +71,57 @@ func (server *Server) createUser(ctx *gin.Context) {
 		return
 	}
 
-	rsp := createdUserResponseDTO{
-		Username:          user.Username,
-		FullName:          user.FullName,
-		Email:             user.Email,
-		PasswordChangedAt: user.PasswordChangedAt,
-		CreatedAt:         user.CreatedAt,
-	}
-
+	rsp := newUserResponseDTO(user)
 	ctx.JSON(http.StatusOK, rsp)
 
+}
+
+type loginUserDTO struct {
+	Username string `json:"username" binding:"required,alphanum"`
+	Password string `json:"password" binding:"required,min=6"`
+}
+
+type loginUserResponseDTO struct {
+	AccessToken string          `json:"access_token"`
+	User        userResponseDTO `json:"user"`
+}
+
+func (server *Server) loginUser(ctx *gin.Context) {
+	var request loginUserDTO
+
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	user, err := server.store.GetUser(ctx, request.Username)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	err = util.CheckPassword(request.Password, user.HashedPassword)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	accessToken, err := server.tokenMaker.CreateToken(
+		user.Username,
+		server.config.AccessTokenDuration,
+	)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	response := loginUserResponseDTO{
+		AccessToken: accessToken,
+		User:        newUserResponseDTO(user),
+	}
+	ctx.JSON(http.StatusOK, response)
 }
