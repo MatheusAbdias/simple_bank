@@ -15,13 +15,12 @@ const ProjectName = "simple_bank"
 
 func Migrate() {
 	dbUrl := os.Getenv("DATABASE_URL")
-	baseDir := os.Getenv("BASE_DIR")
+	baseDir := FindProjectDir()
 
 	fullPath := fmt.Sprintf("file://%s/db/migration", baseDir)
 	m, err := migrate.New(fullPath, dbUrl)
 
 	if err != nil {
-		log.Fatal(fullPath)
 		log.Fatal(err)
 	}
 	if err := m.Up(); err != nil {
