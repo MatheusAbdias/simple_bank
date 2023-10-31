@@ -23,4 +23,4 @@ EXPOSE 8080
 
 ENV BASE_DIR=/simple_bank
 
-# ENTRYPOINT [ "/simple_bank/main"] 
+ENTRYPOINT [ "/simple_bank/main"] 
