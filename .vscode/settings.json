@@ -17,5 +17,4 @@
   "go.testFlags": ["-failfast", "-v"],
   "go.toolsManagement.autoUpdate": true,
   "go.useLanguageServer": true,
-  "cSpell.words": ["mockdb"]
 }

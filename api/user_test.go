@@ -15,8 +15,8 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
+	mockdb "github.com/MatheusAbdias/go_simple_bank/db/mock"
 	db "github.com/MatheusAbdias/go_simple_bank/db/sqlc"
-	mockdb "github.com/MatheusAbdias/go_simple_bank/db/sqlc/mock"
 	"github.com/MatheusAbdias/go_simple_bank/util"
 )
 
@@ -74,6 +74,9 @@ func TestCreateUser(t *testing.T) {
 					CreateUser(gomock.Any(), EqCreateUserParams(arg, password)).
 					Times(1).
 					Return(user, nil)
+				store.EXPECT().
+					CreateSession(gomock.Any(), gomock.Any()).
+					Times(1)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
