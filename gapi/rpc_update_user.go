@@ -18,12 +18,19 @@ func (server *Server) UpdateUser(
 	ctx context.Context,
 	request *pb.UpdateUserRequest,
 ) (*pb.UpdateUserResponse, error) {
-	violations := ValidateUpdateUserRequest(request)
+	authPayload, err := server.authorizeUser(ctx)
+	if err != nil {
+		return nil, unauthenticatedError(err)
+	}
 
+	violations := ValidateUpdateUserRequest(request)
 	if violations != nil {
 		return nil, invalidArgumentError(violations)
 	}
 
+	if authPayload.Username != request.GetUsername() {
+		return nil, status.Errorf(codes.PermissionDenied, "cannot update other user")
+	}
 	arg := db.UpdateUserParams{
 		Username: request.GetUsername(),
 		FullName: sql.NullString{
