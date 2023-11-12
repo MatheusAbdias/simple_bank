@@ -2,11 +2,13 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"testing"
 	"time"
 
-	"github.com/MatheusAbdias/go_simple_bank/util"
 	"github.com/stretchr/testify/require"
+
+	"github.com/MatheusAbdias/go_simple_bank/util"
 )
 
 func createRandomUser(t *testing.T) User {
@@ -52,4 +54,52 @@ func TestGetUser(t *testing.T) {
 
 	require.WithinDuration(t, user.PasswordChangedAt, fetchedUser.PasswordChangedAt, time.Second)
 	require.WithinDuration(t, user.CreatedAt, fetchedUser.CreatedAt, time.Second)
+}
+
+func TestUpdateUserOnlyFullName(t *testing.T) {
+	user := createRandomUser(t)
+
+	newFullName := util.RandomOwner()
+	updatedUser, err := testQueries.UpdateUser(context.Background(), UpdateUserParams{
+		Username: user.Username,
+		FullName: sql.NullString{String: newFullName, Valid: true}})
+
+	require.NoError(t, err)
+	require.Equal(t, newFullName, updatedUser.FullName)
+	require.Equal(t, user.Username, updatedUser.Username)
+	require.Equal(t, user.Email, updatedUser.Email)
+	require.Equal(t, user.HashedPassword, updatedUser.HashedPassword)
+}
+
+func TestUpdateUserOnlyEmail(t *testing.T) {
+	user := createRandomUser(t)
+
+	newEmail := util.RandomEmail()
+	updatedUser, err := testQueries.UpdateUser(context.Background(), UpdateUserParams{
+		Username: user.Username,
+		Email:    sql.NullString{String: newEmail, Valid: true}})
+
+	require.NoError(t, err)
+	require.Equal(t, newEmail, updatedUser.Email)
+	require.Equal(t, user.Username, updatedUser.Username)
+	require.Equal(t, user.FullName, updatedUser.FullName)
+	require.Equal(t, user.HashedPassword, updatedUser.HashedPassword)
+}
+
+func TestUpdateUserOnlyPassword(t *testing.T) {
+	user := createRandomUser(t)
+	password := util.RandomString(31)
+
+	newHashedPassword, err := util.HashPassword(password)
+	require.NoError(t, err)
+
+	updatedUser, err := testQueries.UpdateUser(context.Background(), UpdateUserParams{
+		Username:       user.Username,
+		HashedPassword: sql.NullString{String: newHashedPassword, Valid: true}})
+
+	require.NoError(t, err)
+	require.Equal(t, user.Email, updatedUser.Email)
+	require.Equal(t, user.Username, updatedUser.Username)
+	require.Equal(t, user.FullName, updatedUser.FullName)
+	require.Equal(t, newHashedPassword, updatedUser.HashedPassword)
 }
