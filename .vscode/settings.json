@@ -17,5 +17,8 @@
   "go.testFlags": ["-failfast", "-v"],
   "go.toolsManagement.autoUpdate": true,
   "go.useLanguageServer": true,
-  "protoc": { "options": ["--proto_path=proto"] }
+  "protoc": {
+    "options": ["--proto_path=proto"]
+  },
+  "cSpell.words": ["gapi"]
 }
